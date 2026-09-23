@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 def get_recommender_node(llms_no_tool: list[BaseChatModel]):
     """
-    This function will return a recommender node, the recommender node will create a list of agents which work together to recommend aricles.
+    This function will return a recommender node, the recommender node will create
+    a list of agents which work together to recommend aricles.
 
     ---
 

@@ -92,7 +92,7 @@ def get_email_extractor_node(limit=50):
             if status != "OK":
                 continue
 
-            raw_email = msg_data[0][1]
+            raw_email = msg_data[0][1]  # type: ignore
             msg = email_lib.message_from_bytes(raw_email)
 
             subject, encoding = decode_header(msg["Subject"])[0]
