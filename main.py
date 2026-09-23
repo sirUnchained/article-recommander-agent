@@ -14,8 +14,8 @@ configs = get_configs()
 
 if configs.use_proxy:
     logger.info("Proxy enabled.")
-    os.environ["HTTP_PROXY"] = configs.proxy_link
-    os.environ["HTTPS_PROXY"] = configs.proxy_link
+    os.environ["http_proxy"] = configs.proxy_link
+    os.environ["https_proxy"] = configs.proxy_link
 
 # =========== app and routes ==========
 app = FastAPI()

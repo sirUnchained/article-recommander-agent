@@ -24,13 +24,13 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
             This is list of llms, we will bind tools and system prompt later.
     """
 
-    llms_tool: list[CompiledStateGraph] = []
-    system_prompt = get_system_prompt()
+    agents: list[CompiledStateGraph] = []
+    system_prompt: str = get_system_prompt()
     search_tools = get_tavily_search_tool()
 
     # creating an array of agents which have tools + system prompt + llm
     for llm in llms_no_tool:
-        llms_tool.append(
+        agents.append(
             create_agent(llm, tools=[search_tools], system_prompt=system_prompt)
         )
 
@@ -51,23 +51,30 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
                 article += f"## PDF url\n\n{papers[i].pdf_url}\n\n"
                 articles += article
             else:
-                # If an llm failed in the list, we'll log it and try other llms
-                for llm in llms_tool:
+                # If an llm failed in the list, we'll log it and try other agents
+                for agent in agents:
                     try:
-                        response = llm.invoke({"messages": [("human", articles)]})
+                        response = agent.invoke({"messages": [("user", articles)]})
                         recommendations.append(
                             response.get(
                                 "text",
                                 "there is no text here, check me in recomender_agent.py file!",
                             )
                         )
-                        continue
+
+                        break  # no error? skip agents loop
                     except Exception as e:
                         logger.warning(
-                            "LLM %s failed to run, continue with next llm, error: %s",
-                            llm.name,
+                            "Agent %s failed to run, continue with next agent, error: %s",
+                            agent.get_name(),
                             e,
                         )
+                # And if all agents failed and we have no recommandation
+                else:
+                    logger.warning("All agents were tried but none of them worked")
+                    recommendations.append(
+                        "# There is an error in calling agents! please fix it"
+                    )
 
                 articles = ""
 
