@@ -1,0 +1,16 @@
+pandas
+pyyaml
+requests
+dotenv
+fastapi[standard]
+apscheduler
+schedule
+beautifulsoup4
+langchain
+langchain_core
+langgraph
+langchain_groq
+langchain-tavily
+langchain-google-genai
+markdown
+langchain-openrouter
