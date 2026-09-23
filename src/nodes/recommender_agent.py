@@ -36,7 +36,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
 
     def recommender_node(state: AgentState):
         papers = state.get("papers", [])
-        papers_limit = state.get("papers_limit", 10)
+        papers_limit = state.get("papers_limit", 5)
         recommendations: list[str] = []
 
         # In this loop, until we did not reach the limit we just create article string and then
@@ -52,7 +52,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
                 articles += article
             else:
                 # If an llm failed in the list, we'll log it and try other agents
-                for agent in agents:
+                for i, agent in enumerate(agents):
                     try:
                         response = agent.invoke({"messages": [("user", articles)]})
                         recommendations.append(
@@ -65,8 +65,8 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
                         break  # no error? skip agents loop
                     except Exception as e:
                         logger.warning(
-                            "Agent %s failed to run, continue with next agent, error: %s",
-                            agent.get_name(),
+                            "Agent number %d failed to run, continue with next agent, error: %s",
+                            i + 1,
                             e,
                         )
                 # And if all agents failed and we have no recommandation
