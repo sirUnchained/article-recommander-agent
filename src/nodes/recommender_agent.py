@@ -43,7 +43,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
         # append it to articles, after we reach the limit we will start calling llm.
         articles = ""
         for i in range(len(papers)):
-            if papers_limit % i != 0:
+            if i % papers_limit != 0:
                 article = f"# Article {i+1}\n\n"
                 article += f"## Title\n\n{papers[i].title}\n\n"
                 article += f"## Abstract\n\n{papers[i].abstract}\n\n"
