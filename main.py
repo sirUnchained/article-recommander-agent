@@ -33,3 +33,7 @@ def check_articles():
     chat_with_agent()
 
     return {"status": 200, "message": "You may recive an email soon."}
+
+
+if __name__ == "__main__":
+    chat_with_agent()

@@ -7,4 +7,6 @@ def chat_with_agent():
     return graph.invoke(input={})
 
 if __name__ == '__main__':
+    graph = build_graph()
+
     graph.invoke(input={})
