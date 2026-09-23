@@ -42,7 +42,7 @@ def get_configs():
             "OPENROUTER_LLM_NAME", configs.groq_llm_name
         )
 
-        configs.groq_apikey = os.getenv("GROQ_KEY", configs.groq_apikey)
+        configs.groq_apikey = os.getenv("GROQ_API_KEY", configs.groq_apikey)
         configs.tavily_apikey = os.getenv("TAVILY_API_KEY", configs.tavily_apikey)
 
         configs.email = os.getenv("EMAIL", configs.email)

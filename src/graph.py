@@ -5,6 +5,7 @@ from langchain_openrouter import ChatOpenRouter
 from langgraph.graph import StateGraph
 from langgraph.constants import START, END
 
+from configs import get_configs
 from src.state import AgentState
 from src.nodes.extract_emails import get_email_extractor_node
 from src.nodes.content_extractor import get_content_extractor_node
@@ -17,17 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 def build_graph():
-    openrouter = ChatOpenRouter(
-        model="nvidia/nemotron-3-ultra-550b-a55b:free", temperature=0.5
-    )
-    groq = ChatGroq(model="openai/gpt-oss-20b", temperature=0.5)
-    google = ChatGoogleGenerativeAI(model="", temperature=0.5)
+    configs = get_configs()
+
+    openrouter = ChatOpenRouter(model=configs.openouter_llm_name, temperature=0.5)
+    groq = ChatGroq(model=configs.groq_llm_name, temperature=0.5)
+    # google = ChatGoogleGenerativeAI(model=configs.google_llm_name, temperature=0.5)
 
     # call functions to create nodes
-
     email_extractor_node = get_email_extractor_node()
     content_extractor_node = get_content_extractor_node()
-    recommender_node = get_recommender_node(llms_no_tool=[google, openrouter, groq])
+    recommender_node = get_recommender_node(llms_no_tool=[openrouter, groq])
     email_recomendation_node = get_email_recomendation_node()
 
     # build graph space
