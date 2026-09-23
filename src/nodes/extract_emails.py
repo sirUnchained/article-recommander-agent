@@ -126,6 +126,7 @@ def get_email_extractor_node(limit=50):
                 )
             )
 
+        print(f"found {len(results)} emails as result")
         logger.info("found %d emails as result", len(results))
         return {"emails": results}
 

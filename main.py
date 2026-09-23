@@ -24,7 +24,7 @@ app = FastAPI()
 @app.get("/health")
 def check_health():
 
-    return "All ok!"
+    return {"status": 200, "message": "All ok!"}
 
 
 @app.get("/check-email")
@@ -32,4 +32,4 @@ def check_articles():
 
     chat_with_agent()
 
-    return "You may recive an email soon."
+    return {"status": 200, "message": "You may recive an email soon."}
