@@ -274,7 +274,7 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
     """
 
     links = dedupe_links(links)
-    results: List[PaperInfo] = [None] * len(links)
+    results: List[PaperInfo] = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_index = {
@@ -282,11 +282,9 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
         }
 
         for future in as_completed(future_to_index):
-            i = future_to_index[future]
+            result = future.result()
 
-            try:
-                results[i] = future.result()
-            except Exception as e:
-                results[i] = None
+            if result is not None:
+                results.append(result)
 
-    return [r for r in results if r is not None]
+    return results
