@@ -1,17 +1,22 @@
 from fastapi import FastAPI
-from dotenv import load_dotenv
 
 from src.chat import chat_with_agent
 from configs import get_configs
 
 import os
-import logging
 
-# ========== logger and configs ============
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# ========== loading configs ============
+from dotenv import load_dotenv
+
 load_dotenv()
 configs = get_configs()
+
+# ========== logger and proxy setting ============
+import logging
+
+if configs.is_development:
+    logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if configs.use_proxy:
     logger.info("Proxy enabled.")

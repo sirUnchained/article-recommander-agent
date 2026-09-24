@@ -204,7 +204,31 @@ def _fetch_from_crossref(link: LinkPage) -> Optional[PaperInfo]:
 # ---------- main chain ----------
 
 
-def enrich_link(link: LinkPage) -> PaperInfo:
+def dedupe_links(links: List[LinkPage]) -> List[LinkPage]:
+    """
+    This function will filter us duplicated links.
+
+    ---
+
+    Args:
+        links (List[LinkPage])
+
+    Returns:
+        List[LinkPage]
+    """
+
+    seen = set()
+    unique_links = []
+
+    for link in links:
+        if link.link not in seen:
+            seen.add(link.link)
+            unique_links.append(link)
+
+    return unique_links
+
+
+def enrich_link(link: LinkPage) -> Optional[PaperInfo]:
     """
     This function will try all possibile ways that we could though to get papers informations.
     > **Note**: Use this function if you have only one link.
@@ -228,8 +252,8 @@ def enrich_link(link: LinkPage) -> PaperInfo:
         if result:
             return result
 
-    # If none of them worked so we return at least the link and title
-    return PaperInfo(title=link.title, link=link.link, source="none")
+    # If none of them worked return none
+    return None
 
 
 def enrich_links(links: List[LinkPage]) -> List[PaperInfo]:
@@ -245,4 +269,12 @@ def enrich_links(links: List[LinkPage]) -> List[PaperInfo]:
         List[PaperInfo]: the result we could get.
     """
 
-    return [enrich_link(link) for link in links]
+    linkPages = dedupe_links(links)
+    paperInfos: list[PaperInfo] = []
+
+    for link in linkPages:
+        page = enrich_link(link)
+        if page:
+            paperInfos.append(page)
+
+    return paperInfos

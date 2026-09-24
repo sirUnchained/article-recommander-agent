@@ -6,6 +6,8 @@ class Configs:
     is_development: bool = True
     use_proxy: bool = True
     proxy_link: str = "none"
+
+    include_proquests: bool = False
     tool_calls_count: int = 5
 
     groq_llm_name: str = "openai/gpt-oss-20b"
@@ -32,6 +34,10 @@ def get_configs():
         configs.is_development = os.getenv("DEVELOPMENT", "true").lower() == "true"
         configs.use_proxy = os.getenv("USE_PROXY", "true").lower() == "true"
         configs.proxy_link = os.getenv("PROXY_LINK", configs.proxy_link)
+
+        configs.include_proquests = (
+            os.getenv("INCLUDE_PROQUEST", "false").lower() == "true"
+        )
         configs.tool_calls_count = int(
             os.getenv("TOOL_CALLS_COUNT", configs.tool_calls_count)
         )

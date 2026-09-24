@@ -20,13 +20,13 @@ def get_content_extractor_node():
             return
 
         links = extract_paper_links(emails)
+        logger.info("We extracted %d links from emails.", len(links))
         if len(links) == 0:
             logger.warning("In the emails we did not found any links.")
             return
 
-        logger.info("We extracted %d links from papers.", len(links))
-
         papersInfo = enrich_links(links=links)
+        logger.info("We extracted %d papers from links", len(papersInfo))
 
         return {"papers": papersInfo, "papers_limit": 10}
 
