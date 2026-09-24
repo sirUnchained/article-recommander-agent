@@ -45,6 +45,8 @@ Prioritize papers related to:
 * Embodied AI, robotics, and AI + hardware when the connection to intelligent systems is substantial
 
 Do not recommend papers merely because they contain the word "AI", "deep learning", "machine learning", or "neural network".
+
+> **IMPORTANT**: if the article is not related in user intrests, just ignore article and never talk about it.
 """
 
 _INITIAL_SCREENING = """
