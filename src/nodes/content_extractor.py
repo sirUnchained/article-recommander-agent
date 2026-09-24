@@ -20,7 +20,7 @@ def get_content_extractor_node():
             return
 
         links = extract_paper_links(emails)
-        logger.info("We extracted %d links from emails.", len(links))
+        logger.info("We extracted %d links from emails", len(links))
         if len(links) == 0:
             logger.warning("In the emails we did not found any links.")
             return
