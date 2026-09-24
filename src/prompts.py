@@ -40,8 +40,6 @@ Prioritize papers related to:
 * Context engineering
 * LLM evaluation and benchmarking
 * LLM security and safety
-* Data poisoning and attacks against AI systems
-* Mechanistic interpretability
 * Multimodal AI
 * Reinforcement learning when directly relevant to AI systems or intelligent agents
 * Embodied AI, robotics, and AI + hardware when the connection to intelligent systems is substantial

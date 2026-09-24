@@ -287,8 +287,6 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
             try:
                 results[i] = future.result()
             except Exception as e:
-                results[i] = PaperInfo(
-                    title=links[i].title, link=links[i].link, source="error"
-                )
+                results[i] = None
 
-    return results
+    return [r for r in results if r is not None]
