@@ -31,7 +31,7 @@ def _call_agents(batch_of_artciles: str, agents: list[CompiledStateGraph]):
             )
 
     logger.warning("All agents were tried but none of them worked")
-    return "# There is an error in calling agents! please fix it"
+    return f"# There is an error in calling agents! please fix it\n\n# Articles ignored\n{batch_of_artciles}"
 
 
 def _create_batches_of_articles(articles, articles_limit):
