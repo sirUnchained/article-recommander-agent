@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 def get_content_extractor_node():
     """
-    This function will return `content_extractor_node` adn this node is used to extract information from papers which will be send to next node.
+    This function will return `content_extractor_node` adn this node is used to extract information
+    from papers which will be send to next node.
     """
 
     def content_extractor_node(state: AgentState):

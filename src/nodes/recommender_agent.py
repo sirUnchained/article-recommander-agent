@@ -31,19 +31,19 @@ def _call_agents(batch_of_artciles: str, agents: list[CompiledStateGraph]):
             )
 
     logger.warning("All agents were tried but none of them worked")
-    return f"# There is an error in calling agents! please fix it\n\n# Articles ignored\n{batch_of_artciles}"
+    return f"# There is an error in calling agents! please fix it\n\n# papers ignored\n{batch_of_artciles}"
 
 
-def _create_batches_of_articles(articles, articles_limit):
+def _create_batches_of_papers(papers, papers_limit):
     """
-    This fucntion will get all of articles with a limit, with the limit it choses some articles
+    This fucntion will get all of papers with a limit, with the limit it choses some papers
     and turn them into a single batch (prompt), this process will be repeated until we have turned
-    all articles into a batch.
+    all papers into a batch.
     """
     current = ""
-    batch_of_articles: list[str] = []
+    batch_of_papers: list[str] = []
 
-    for i, paper in enumerate(articles):
+    for i, paper in enumerate(papers):
         article = f"# Article {i + 1}\n\n"
         article += f"## Title\n\n{paper.title}\n\n"
         article += f"## Abstract\n\n{paper.abstract}\n\n"
@@ -51,14 +51,14 @@ def _create_batches_of_articles(articles, articles_limit):
         article += f"## PDF url\n\n{paper.pdf_url}\n\n"
         current += article
 
-        if (i + 1) % articles_limit == 0:
-            batch_of_articles.append(current)
+        if (i + 1) % papers_limit == 0:
+            batch_of_papers.append(current)
             current = ""
 
     if current:
-        batch_of_articles.append(current)
+        batch_of_papers.append(current)
 
-    return batch_of_articles
+    return batch_of_papers
 
 
 def get_recommender_node(llms_no_tool: list[BaseChatModel]):
@@ -84,23 +84,35 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
         )
 
     def recommender_node(state: AgentState):
-        articles = state.get("articles", [])
-        articles_limit = state.get("articles_limit", 3)
+        papers = state.get("papers", [])
+        papers_limit = state.get("papers_limit", 3)
         recommendations: list[str] = []
 
-        batches_of_articles = _create_batches_of_articles(
-            articles=articles, articles_limit=articles_limit
+        batches_of_papers = _create_batches_of_papers(
+            papers=papers, papers_limit=papers_limit
         )
 
-        # we are calling agent using concurency, we pass each one a single batch of articles.
+        logger.info(
+            "We have %d papers, each batch size is %d, so now we have %d batches",
+            len(papers),
+            papers_limit,
+            len(batches_of_papers),
+        )
+
+        # we are calling agent using concurency, we pass each one a single batch of papers.
         with ThreadPoolExecutor(max_workers=8) as executor:
             future_to_index = {
                 executor.submit(_call_agents, batch, agents): i
-                for i, batch in enumerate(batches_of_articles)
+                for i, batch in enumerate(batches_of_papers)
             }
 
             for future in as_completed(future_to_index):
                 recommendations.append(future.result())
+
+        if len(recommendations) == 0:
+            logger.warning(
+                "there is no recommendations! check if agents are working or not"
+            )
 
         return {"recommendations": recommendations}
 
