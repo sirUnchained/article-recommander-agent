@@ -8,9 +8,57 @@ from src.state import AgentState
 from src.prompts import get_system_prompt
 from src.tools.search_tool import get_tavily_search_tool
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _call_agents(batch_of_artciles: str, agents: list[CompiledStateGraph]):
+    for i, agent in enumerate(agents):
+        try:
+            response = agent.invoke({"messages": [("user", batch_of_artciles)]})
+            return response.get(
+                "text",
+                "there is no text here, check me in recomender_agent.py file!",
+            )
+
+        except Exception as e:
+            logger.warning(
+                "Agent number %d failed to run, continue with next agent, error: %s",
+                i + 1,
+                e,
+            )
+
+    logger.warning("All agents were tried but none of them worked")
+    return "# There is an error in calling agents! please fix it"
+
+
+def _create_batches_of_articles(articles, articles_limit):
+    """
+    This fucntion will get all of articles with a limit, with the limit it choses some articles
+    and turn them into a single batch (prompt), this process will be repeated until we have turned
+    all articles into a batch.
+    """
+    current = ""
+    batch_of_articles: list[str] = []
+
+    for i, paper in enumerate(articles):
+        article = f"# Article {i + 1}\n\n"
+        article += f"## Title\n\n{paper.title}\n\n"
+        article += f"## Abstract\n\n{paper.abstract}\n\n"
+        article += f"## Link to Site\n\n{paper.link}\n\n"
+        article += f"## PDF url\n\n{paper.pdf_url}\n\n"
+        current += article
+
+        if (i + 1) % articles_limit == 0:
+            batch_of_articles.append(current)
+            current = ""
+
+    if current:
+        batch_of_articles.append(current)
+
+    return batch_of_articles
 
 
 def get_recommender_node(llms_no_tool: list[BaseChatModel]):
@@ -36,48 +84,23 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
         )
 
     def recommender_node(state: AgentState):
-        papers = state.get("papers", [])
-        papers_limit = state.get("papers_limit", 3)
+        articles = state.get("articles", [])
+        articles_limit = state.get("articles_limit", 3)
         recommendations: list[str] = []
 
-        # In this loop, until we did not reach the limit we just create article string and then
-        # append it to articles, after we reach the limit we will start calling llm.
-        articles = ""
-        for i in range(len(papers)):
-            if i % papers_limit != 0:
-                article = f"# Article {i+1}\n\n"
-                article += f"## Title\n\n{papers[i].title}\n\n"
-                article += f"## Abstract\n\n{papers[i].abstract}\n\n"
-                article += f"## Link to Site\n\n{papers[i].link}\n\n"
-                article += f"## PDF url\n\n{papers[i].pdf_url}\n\n"
-                articles += article
-            else:
-                # If an llm failed in the list, we'll log it and try other agents
-                for i, agent in enumerate(agents):
-                    try:
-                        response = agent.invoke({"messages": [("user", articles)]})
-                        recommendations.append(
-                            response.get(
-                                "text",
-                                "there is no text here, check me in recomender_agent.py file!",
-                            )
-                        )
+        batches_of_articles = _create_batches_of_articles(
+            articles=articles, articles_limit=articles_limit
+        )
 
-                        break  # no error? skip agents loop
-                    except Exception as e:
-                        logger.warning(
-                            "Agent number %d failed to run, continue with next agent, error: %s",
-                            i + 1,
-                            e,
-                        )
-                # And if all agents failed and we have no recommandation
-                else:
-                    logger.warning("All agents were tried but none of them worked")
-                    recommendations.append(
-                        "# There is an error in calling agents! please fix it"
-                    )
+        # we are calling agent using concurency, we pass each one a single batch of articles.
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            future_to_index = {
+                executor.submit(_call_agents, batch, agents): i
+                for i, batch in enumerate(batches_of_articles)
+            }
 
-                articles = ""
+            for future in as_completed(future_to_index):
+                recommendations.append(future.result())
 
         return {"recommendations": recommendations}
 
