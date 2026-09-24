@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 from src.types import PaperInfo, LinkPage
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from typing import Optional, List
 import re
@@ -256,25 +257,38 @@ def enrich_link(link: LinkPage) -> Optional[PaperInfo]:
     return None
 
 
-def enrich_links(links: List[LinkPage]) -> List[PaperInfo]:
+def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]:
     """
     This function will try all possibile ways that we could though to get papers informations.
+    It also uses cuncorency to make stuff faster so you can pass it number of workers.
+
     > **Note**: Use this function if you have only more than one link.
     ---
 
     Args:
         link (str): the link you have.
+        max_workers (int): number of workers.
 
     Returns:
         List[PaperInfo]: the result we could get.
     """
 
-    linkPages = dedupe_links(links)
-    paperInfos: list[PaperInfo] = []
+    links = dedupe_links(links)
+    results: List[PaperInfo] = [None] * len(links)
 
-    for link in linkPages:
-        page = enrich_link(link)
-        if page:
-            paperInfos.append(page)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_index = {
+            executor.submit(enrich_link, link=link): i for i, link in enumerate(links)
+        }
 
-    return paperInfos
+        for future in as_completed(future_to_index):
+            i = future_to_index[future]
+
+            try:
+                results[i] = future.result()
+            except Exception as e:
+                results[i] = PaperInfo(
+                    title=links[i].title, link=links[i].link, source="error"
+                )
+
+    return results
