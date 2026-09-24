@@ -93,7 +93,7 @@ def get_email_extractor_node(limit=50):
                 continue
 
             raw_email = msg_data[0][1]  # type: ignore
-            msg = email_lib.message_from_bytes(raw_email)
+            msg = email_lib.message_from_bytes(raw_email)  # type: ignore
 
             subject, encoding = decode_header(msg["Subject"])[0]
             if isinstance(subject, bytes):
@@ -127,6 +127,6 @@ def get_email_extractor_node(limit=50):
             )
 
         logger.info("found %d emails as result", len(results))
-        return {"emails": results}
+        return {"emails": results, "papers_limit": 3}
 
     return email_extractor_node

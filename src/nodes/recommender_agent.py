@@ -37,7 +37,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
 
     def recommender_node(state: AgentState):
         papers = state.get("papers", [])
-        papers_limit = state.get("papers_limit", 5)
+        papers_limit = state.get("papers_limit", 3)
         recommendations: list[str] = []
 
         # In this loop, until we did not reach the limit we just create article string and then
