@@ -29,6 +29,6 @@ def get_content_extractor_node():
         papersInfo = enrich_links(links=links)
         logger.info("We extracted %d papers from links", len(papersInfo))
 
-        return {"papers": papersInfo, "papers_limit": 10}
+        return {"papers": papersInfo}
 
     return content_extractor_node
