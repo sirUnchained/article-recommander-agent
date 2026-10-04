@@ -14,6 +14,9 @@ class Configs:
     google_llm_name: str = "openai/gpt-oss-20b"
     openouter_llm_name: str = "openai/gpt-oss-20b"
 
+    use_ollama: bool = False
+    ollama_llm_name: str = "Qwen2.5-7B-Instruct"
+
     email: str = "none"
     password: str = "none"
 
@@ -47,6 +50,9 @@ def get_configs():
         configs.openouter_llm_name = os.getenv(
             "OPENROUTER_LLM_NAME", configs.groq_llm_name
         )
+
+        configs.use_ollama = os.getenv("USE_OLLAMA", "false").lower() == "true"
+        configs.ollama_llm_name = os.getenv("OLLAMA_LLM_NAME", configs.ollama_llm_name)
 
         configs.groq_apikey = os.getenv("GROQ_API_KEY", configs.groq_apikey)
         configs.tavily_apikey = os.getenv("TAVILY_API_KEY", configs.tavily_apikey)

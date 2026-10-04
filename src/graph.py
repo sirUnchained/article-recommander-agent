@@ -1,6 +1,7 @@
 # from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openrouter import ChatOpenRouter
+from langchain_ollama.chat_models import ChatOllama
 
 from langgraph.graph import StateGraph
 from langgraph.constants import START, END
@@ -20,14 +21,26 @@ logger = logging.getLogger(__name__)
 def build_graph():
     configs = get_configs()
 
-    openrouter = ChatOpenRouter(model=configs.openouter_llm_name, temperature=0.5)
-    groq = ChatGroq(model=configs.groq_llm_name, temperature=0.5)
-    # google = ChatGoogleGenerativeAI(model=configs.google_llm_name, temperature=0.5)
+    LLMs = []
+    if not configs.use_ollama:
+        openrouter = ChatOpenRouter(
+            model=configs.openouter_llm_name, temperature=0.5, name="openrouter"
+        )
+        groq = ChatGroq(model=configs.groq_llm_name, temperature=0.5, name="groq")
+        # google = ChatGoogleGenerativeAI(model=configs.google_llm_name, temperature=0.5, name='google')
+
+        LLMs.append(openrouter)
+        LLMs.append(groq)
+    else:
+        ollama = ChatOllama(
+            model=configs.ollama_llm_name, temperature=0.5, name="ollama"
+        )
+        LLMs.append(ollama)
 
     # call functions to create nodes
     email_extractor_node = get_email_extractor_node()
     content_extractor_node = get_content_extractor_node()
-    recommender_node = get_recommender_node(llms_no_tool=[openrouter, groq])
+    recommender_node = get_recommender_node(llms_no_tool=LLMs)
     email_recomendation_node = get_email_recomendation_node()
 
     # build graph space
