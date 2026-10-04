@@ -1,9 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 
-
 from src.types import PaperInfo, LinkPage
 
+import time
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from typing import Optional, List
@@ -16,6 +17,8 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
 # ---------- arXiv ----------
 # most articles are in arxiv, so we need to scrap there!
+
+_arxiv_lock = threading.Semaphore(1)
 
 
 def _fetch_from_arxiv(link: LinkPage) -> Optional[PaperInfo]:
@@ -35,33 +38,49 @@ def _fetch_from_arxiv(link: LinkPage) -> Optional[PaperInfo]:
     match = re.search(r"(\d{4}\.\d{4,5})", link.link)
     arxiv_id = match.group(1) if match else None
 
+    if "arxiv.org" not in link.link:
+        return None
+
     if not arxiv_id:
         return None
 
-    try:
-        # simply send request to `export.arxiv.org` for article
-        resp = requests.get(
-            f"http://export.arxiv.org/api/query?id_list={arxiv_id}", timeout=15
-        )
-        root = ET.fromstring(resp.text)
-        ns = {"atom": "http://www.w3.org/2005/Atom"}
-        entry = root.find("atom:entry", ns)
+    # arxiv has a hard rate limit, so we stop for 0.5 seconds
+    with _arxiv_lock:
+        time.sleep(0.5)
 
-        # if we did not find anything just return none
-        if entry is None:
+        try:
+            # simply send request to `export.arxiv.org` for article
+            resp = requests.get(
+                f"http://export.arxiv.org/api/query?id_list={arxiv_id}", timeout=10
+            )
+            if resp.status_code != 200 or not resp.text.strip():
+                logger.warning(
+                    "arXiv returned empty/bad response (status %d) for %s",
+                    resp.status_code,
+                    arxiv_id,
+                )
+                return None
+
+            root = ET.fromstring(resp.text)
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
+            entry = root.find("atom:entry", ns)
+
+            # if we did not find anything just return none
+            if entry is None:
+                return None
+
+            # else return data
+            abstract = entry.find("atom:summary", ns).text.strip()
+            return PaperInfo(
+                title=link.title,
+                link=link.link,
+                abstract=abstract,
+                pdf_url=f"https://arxiv.org/pdf/{arxiv_id}",
+                source="arxiv",
+            )
+        except Exception as e:
+            logger.warning("arxiv failed to extract %s, error: %s", link, e)
             return None
-
-        # else return data
-        abstract = entry.find("atom:summary", ns).text.strip()
-        return PaperInfo(
-            title=link.title,
-            link=link.link,
-            abstract=abstract,
-            pdf_url=f"https://arxiv.org/pdf/{arxiv_id}",
-            source="arxiv",
-        )
-    except Exception:
-        return None
 
 
 # But most of the articles are behind a powerfull robot detector ...
@@ -91,9 +110,14 @@ def _fetch_from_semantic_scholar(link: LinkPage) -> Optional[PaperInfo]:
                 "fields": "title,abstract,tldr,venue,citationCount,openAccessPdf",
                 "limit": 1,
             },
-            timeout=15,
+            timeout=10,
         )
         if resp.status_code != 200:
+            logger.warning(
+                "Semantic Scholar API returned empty/bad response (status %d) for %s",
+                resp.status_code,
+                link.link,
+            )
             return None
 
         results = resp.json().get("data", [])
@@ -114,7 +138,8 @@ def _fetch_from_semantic_scholar(link: LinkPage) -> Optional[PaperInfo]:
             pdf_url=(paper.get("openAccessPdf") or {}).get("url"),
             source="semantic_scholar",
         )
-    except Exception:
+    except Exception as e:
+        logger.warning("Semantic Scholar API failed to extract %s, error: %s", link, e)
         return None
 
 
@@ -136,6 +161,14 @@ def _fetch_from_publisher_page(link: LinkPage) -> Optional[PaperInfo]:
 
     try:
         resp = requests.get(link.link, headers=HEADERS, timeout=15)
+        if resp.status_code != 200:
+            logger.warning(
+                "publisher page returned empty/bad response (status %d) for %s",
+                resp.status_code,
+                link.link,
+            )
+            return None
+
         soup = BeautifulSoup(resp.text, "html.parser")
 
         def get_meta(name):
@@ -153,7 +186,8 @@ def _fetch_from_publisher_page(link: LinkPage) -> Optional[PaperInfo]:
             pdf_url=get_meta("citation_pdf_url"),
             source="publisher_scrape",
         )
-    except Exception:
+    except Exception as e:
+        logger.warning("publisher page failed to extract %s, error: %s", link, e)
         return None
 
 
@@ -177,8 +211,16 @@ def _fetch_from_crossref(link: LinkPage) -> Optional[PaperInfo]:
         resp = requests.get(
             "https://api.crossref.org/works",
             params={"query.bibliographic": link.title, "rows": 1},
-            timeout=15,
+            timeout=10,
         )
+        if resp.status_code != 200:
+            logger.warning(
+                "Crossref API returned empty/bad response (status %d) for %s",
+                resp.status_code,
+                link.link,
+            )
+            return None
+
         items = resp.json().get("message", {}).get("items", [])
         if not items:
             return None
@@ -198,7 +240,8 @@ def _fetch_from_crossref(link: LinkPage) -> Optional[PaperInfo]:
             citation_count=item.get("is-referenced-by-count"),
             source="crossref",
         )
-    except Exception:
+    except Exception as e:
+        logger.warning("Crossref API failed to extract %s, error: %s", link, e)
         return None
 
 
@@ -282,7 +325,11 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
         }
 
         for future in as_completed(future_to_index):
-            result = future.result()
+            try:
+                result = future.result(timeout=60)
+            except TimeoutError as e:
+                logger.warning("Timeout reached for one of links, error: %s", e)
+                continue
 
             if result is not None:
                 results.append(result)

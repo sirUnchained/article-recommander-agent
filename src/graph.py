@@ -33,7 +33,9 @@ def build_graph():
         LLMs.append(groq)
     else:
         ollama = ChatOllama(
-            model=configs.ollama_llm_name, temperature=0.5, name="ollama"
+            model=configs.ollama_llm_name,
+            temperature=0.5,
+            name="ollama",
         )
         LLMs.append(ollama)
 
