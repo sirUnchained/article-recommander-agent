@@ -1,6 +1,7 @@
 from langchain.chat_models import BaseChatModel
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import AIMessage
 
 from langchain.agents import create_agent
 
@@ -19,12 +20,19 @@ def _call_agents(batch_of_artciles: str, agents: list[CompiledStateGraph]):
     for i, agent in enumerate(agents):
         try:
             response = agent.invoke({"messages": [("user", batch_of_artciles)]})
-            agent_text = response.get(
-                "text",
-                "there is no text here, check me in recomender_agent.py file!",
-            )
-            logger.info("agent response: %s", agent_text)
-            return agent_text
+            messages = response.get("messages", [])
+            if not messages:
+                raise ValueError("No messages returned from agent")
+
+            ai_messages = [m for m in messages if isinstance(m, AIMessage)]
+            last_message = ai_messages[-1] if ai_messages else None
+
+            content = getattr(last_message, "content", None)
+            if not content:
+                raise ValueError("Last message has no content")
+
+            logger.info("agent response: %s", content)
+            return content
 
         except Exception as e:
             logger.warning(
