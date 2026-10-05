@@ -169,30 +169,73 @@ However, you may identify relationships between papers when useful, such as:
 
 Do not rank papers against each other unless explicitly instructed.
 """
-
 _OUTPUT = """
 ## Output
 
-Return structured data for every input paper.
+For every input paper, return a JSON array. Output only valid JSON. Do not wrap it in Markdown code fences. Do not write any explanation before or after the JSON.
 
-For each paper provide:
+SCHEMA:
+Each paper must be a JSON object with these keys:
+- "title": string
+- "decision": string
+- "relevance_score": integer 0-100
+- "technical_interest_score": integer 0-100
+- "research_value_score": integer 0-100
+- "confidence": integer 0-100
+- "relevant_topics": array of strings
+- "key_evidence": string
+- "reason": string
+- "needs_further_search": boolean
+- "search_for": string  // required if needs_further_search is true; otherwise use ""
+- "direct_link": string
 
-- title
-- decision
-- relevance_score
-- technical_interest_score
-- research_value_score
-- confidence
-- relevant_topics
-- key_evidence
-- reason
-- needs_further_search
+NOTE:
+- Use double quotes for all keys and string values.
+- If needs_further_search is true, set search_for to a brief description of the missing information.
+- If needs_further_search is false, set search_for to "".
+- Keep reason concise and evidence-based.
+- If there are no papers, return [].
 
-If `needs_further_search` is true, briefly state what information should be searched for.
-
-Keep reasoning concise and evidence-based.
+EXAMPLE:
+[
+  {
+    "title": "Large language models discover complementary heuristics for combinatorial optimization",
+    "decision": "Recommend",
+    "relevance_score": 80,
+    "technical_interest_score": 85,
+    "research_value_score": 75,
+    "confidence": 70,
+    "relevant_topics": [
+      "LLM optimization",
+      "combinatorial problems",
+      "algorithm design"
+    ],
+    "key_evidence": "Introduces LACE framework for heuristic discovery, achieves 0.945 benchmark score.",
+    "reason": "Demonstrates LLM application in algorithmic problem-solving, relevant to optimization and AI engineering.",
+    "needs_further_search": true,
+    "search_for": "Framework implementation details, benchmark comparison",
+    "direct_link": ""
+  },
+  {
+    "title": "The Missing Primitive: Diagnosing and Repairing Mathematical Reasoning in Large Language Models",
+    "decision": "Recommend",
+    "relevance_score": 75,
+    "technical_interest_score": 80,
+    "research_value_score": 70,
+    "confidence": 65,
+    "relevant_topics": [
+      "LLM reasoning",
+      "mathematical benchmarks",
+      "self-distillation"
+    ],
+    "key_evidence": "Proposes \\hlei{}, benchmark and \\abs{} framework for improving mathematical reasoning.",
+    "reason": "Contributes to LLM evaluation methodologies, though focused on mathematical tasks.",
+    "needs_further_search": true,
+    "search_for": "Benchmark implementation, self-distillation techniques",
+    "direct_link": ""
+  }
+]
 """
-
 
 _RULES = """
 ## Critical Rule
