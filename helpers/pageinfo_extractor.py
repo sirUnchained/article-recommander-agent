@@ -53,9 +53,6 @@ def _fetch_from_arxiv(link: LinkPage) -> Optional[PaperInfo]:
     # searching for arxiv id, if we couldn't find it so we faild to detect article and return none
     arxiv_id = _extract_arxiv_id(link.link)
 
-    if "arxiv.org" not in link.link:
-        return None
-
     if not arxiv_id:
         return None
 
