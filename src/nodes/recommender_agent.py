@@ -79,7 +79,6 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
     configs = get_configs()
     agents: list[CompiledStateGraph] = []
     system_prompt: str = get_system_prompt()
-    search_tools = get_tavily_search_tool()
 
     # creating an array of agents which have tools + system prompt + llm
     for llm in llms_no_tool:
