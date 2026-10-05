@@ -19,10 +19,12 @@ def _call_agents(batch_of_artciles: str, agents: list[CompiledStateGraph]):
     for i, agent in enumerate(agents):
         try:
             response = agent.invoke({"messages": [("user", batch_of_artciles)]})
-            return response.get(
+            agent_text = response.get(
                 "text",
                 "there is no text here, check me in recomender_agent.py file!",
             )
+            logger.info("agent response: %s", agent_text)
+            return agent_text
 
         except Exception as e:
             logger.warning(
@@ -81,9 +83,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
 
     # creating an array of agents which have tools + system prompt + llm
     for llm in llms_no_tool:
-        agents.append(
-            create_agent(llm, tools=[search_tools], system_prompt=system_prompt)
-        )
+        agents.append(create_agent(llm, system_prompt=system_prompt))
 
     def recommender_node(state: AgentState):
         papers = state.get("papers", [])
