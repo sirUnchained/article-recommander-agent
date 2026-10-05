@@ -92,6 +92,8 @@ For example, if an abstract claims improved performance but provides no experime
 _TOOL_USAGE = """
 # Tool Usage
 
+> **Important** There may be no tools, so make sure you have access and then call tools!
+
 You have access to a web search tool.
 
 Use the search tool selectively when additional information can materially improve the decision.
