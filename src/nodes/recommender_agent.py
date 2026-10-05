@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from langchain.agents import create_agent
 
+from configs import get_configs
 from src.state import AgentState
 from src.prompts import get_system_prompt
 from src.tools.search_tool import get_tavily_search_tool
@@ -73,6 +74,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
             This is list of llms, we will bind tools and system prompt later.
     """
 
+    configs = get_configs()
     agents: list[CompiledStateGraph] = []
     system_prompt: str = get_system_prompt()
     search_tools = get_tavily_search_tool()
@@ -85,7 +87,7 @@ def get_recommender_node(llms_no_tool: list[BaseChatModel]):
 
     def recommender_node(state: AgentState):
         papers = state.get("papers", [])
-        papers_limit = state.get("papers_limit", 3)
+        papers_limit = configs.article_count_per_message
         recommendations: list[str] = []
 
         batches_of_papers = _create_batches_of_papers(

@@ -9,6 +9,8 @@ class Configs:
 
     include_proquests: bool = False
     tool_calls_count: int = 5
+    article_count_per_message: int = 5
+    fetch_article_timeout_sec: int = 5
 
     groq_llm_name: str = "openai/gpt-oss-20b"
     google_llm_name: str = "openai/gpt-oss-20b"
@@ -43,6 +45,12 @@ def get_configs():
         )
         configs.tool_calls_count = int(
             os.getenv("TOOL_CALLS_COUNT", configs.tool_calls_count)
+        )
+        configs.article_count_per_message = int(
+            os.getenv("ARTICLE_COUNT_PER_MESSAGE", configs.article_count_per_message)
+        )
+        configs.fetch_article_timeout_sec = int(
+            os.getenv("FETCH_ARTICLE_TIMEOUT_SEC", configs.fetch_article_timeout_sec)
         )
 
         configs.groq_llm_name = os.getenv("GROQ_LLM_NAME", configs.groq_llm_name)

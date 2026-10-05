@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from src.types import PaperInfo, LinkPage
+from configs import get_configs
 
 import time
 import threading
@@ -316,6 +317,7 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
         List[PaperInfo]: the result we could get.
     """
 
+    configs = get_configs()
     links = dedupe_links(links)
     results: List[PaperInfo] = []
 
@@ -326,7 +328,7 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
 
         for future in as_completed(future_to_index):
             try:
-                result = future.result(timeout=60)
+                result = future.result(timeout=configs.fetch_article_timeout_sec)
             except TimeoutError as e:
                 logger.warning("Timeout reached for one of links, error: %s", e)
                 continue
