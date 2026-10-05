@@ -4,11 +4,15 @@ from bs4 import BeautifulSoup
 from src.types import PaperInfo, LinkPage
 from configs import get_configs
 
-import time
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+
+import os
+import json
+import time
 import xml.etree.ElementTree as ET
 from typing import Optional, List
+from dataclasses import asdict
 import re
 import logging
 
@@ -321,19 +325,33 @@ def enrich_links(links: List[LinkPage], max_workers: int = 8) -> List[PaperInfo]
     links = dedupe_links(links)
     results: List[PaperInfo] = []
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_index = {
-            executor.submit(enrich_link, link=link): i for i, link in enumerate(links)
-        }
+    if not os.path.exists("./papers.json"):
 
-        for future in as_completed(future_to_index):
-            try:
-                result = future.result(timeout=configs.fetch_article_timeout_sec)
-            except TimeoutError as e:
-                logger.warning("Timeout reached for one of links, error: %s", e)
-                continue
+        logger.info("no `./papers.json` found, runing functions")
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_index = {
+                executor.submit(enrich_link, link=link): i
+                for i, link in enumerate(links)
+            }
 
-            if result is not None:
-                results.append(result)
+            for future in as_completed(future_to_index):
+                try:
+                    result = future.result(timeout=configs.fetch_article_timeout_sec)
+                except TimeoutError as e:
+                    logger.warning("Timeout reached for one of links, error: %s", e)
+                    continue
+
+                if result is not None:
+                    results.append(result)
+
+        logger.info("saving papers into `./papers.json`.")
+        with open("./papers.json", "w") as f:
+            json.dump([asdict(p) for p in results], f)
+
+    else:
+        logger.info("Loading papers from `papers.json` file")
+        with open("./papers.json", "r") as f:
+            data = json.load(f)
+        results = [PaperInfo(**d) for d in data]
 
     return results
