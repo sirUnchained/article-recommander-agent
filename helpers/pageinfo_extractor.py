@@ -20,6 +20,17 @@ logger = logging.getLogger(__name__)
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
 
+def _extract_arxiv_id(url: str) -> Optional[str]:
+    "This functions searchs and find the article id if it exists."
+    if "arxiv.org" in url:
+        match = re.search(r"(\d{4}\.\d{4,5})", url)
+        return match.group(1) if match else None
+    if "huggingface.co/papers/" in url:
+        match = re.search(r"papers/(\d{4}\.\d{4,5})", url)
+        return match.group(1) if match else None
+    return None
+
+
 # ---------- arXiv ----------
 # most articles are in arxiv, so we need to scrap there!
 
@@ -40,8 +51,7 @@ def _fetch_from_arxiv(link: LinkPage) -> Optional[PaperInfo]:
     """
 
     # searching for arxiv id, if we couldn't find it so we faild to detect article and return none
-    match = re.search(r"(\d{4}\.\d{4,5})", link.link)
-    arxiv_id = match.group(1) if match else None
+    arxiv_id = _extract_arxiv_id(link.link)
 
     if "arxiv.org" not in link.link:
         return None
