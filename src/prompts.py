@@ -172,7 +172,7 @@ Do not rank papers against each other unless explicitly instructed.
 _OUTPUT = """
 ## Output
 
-For every input paper, return a JSON array. Output only valid JSON. Do not wrap it in Markdown code fences. Do not write any explanation before or after the JSON.
+For every input paper, you MUST return a JSON array. Output only valid JSON. Do not wrap it in Markdown code fences. Do not write any explanation before or after the JSON.
 
 SCHEMA:
 Each paper must be a JSON object with these keys:
@@ -214,7 +214,7 @@ EXAMPLE:
     "reason": "Demonstrates LLM application in algorithmic problem-solving, relevant to optimization and AI engineering.",
     "needs_further_search": true,
     "search_for": "Framework implementation details, benchmark comparison",
-    "direct_link": ""
+    "direct_link": "the link which you got from article."
   },
   {
     "title": "The Missing Primitive: Diagnosing and Repairing Mathematical Reasoning in Large Language Models",
@@ -232,7 +232,7 @@ EXAMPLE:
     "reason": "Contributes to LLM evaluation methodologies, though focused on mathematical tasks.",
     "needs_further_search": true,
     "search_for": "Benchmark implementation, self-distillation techniques",
-    "direct_link": ""
+    "direct_link": "the link which you got from article."
   }
 ]
 """
