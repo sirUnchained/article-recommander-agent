@@ -36,8 +36,9 @@ def _json_to_markdowns(chosen_articles: list[ChosenArticleStructure]):
 
 def get_email_recomendation_node():
     """
-    This function will return `email_recomendation_node` and this node will email user the previuse nodes response.
+    This function will return `email_recomendation_node` and this node will email user the previous nodes response.
     """
+
     configs = get_configs()
 
     def email_recomendation_node(state: AgentState):

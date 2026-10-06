@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -36,7 +36,7 @@ class ChosenArticleStructure:
     technical_interest_score: int = 0
     research_value_score: int = 0
     confidence: int = 0
-    relevant_topics: list[str] = []
+    relevant_topics: list[str] = field(default_factory=list)
     key_evidence: str = "LLM BUG"
     reason: str = "LLM BUG"
     needs_further_search: bool = False
