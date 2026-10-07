@@ -24,7 +24,6 @@ def _call_agents(batch_of_artciles: str, agents: list[CompiledStateGraph]):
             if not messages:
                 raise ValueError("No messages returned from agent")
 
-            logger.debug("messages type: %s", type(messages))
             ai_messages = [m for m in messages if isinstance(m, AIMessage)]
             last_message = ai_messages[-1] if ai_messages else None
 
