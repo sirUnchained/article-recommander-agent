@@ -31,7 +31,6 @@ _USER_INTERESTS = """
 Prioritize papers related to:
 
 * Large Language Models (LLMs)
-* Natural Language Processing (NLP)
 * LLM engineering
 * LLM inference and optimization
 * Fine-tuning and model adaptation
@@ -40,8 +39,6 @@ Prioritize papers related to:
 * Context engineering
 * LLM evaluation and benchmarking
 * LLM security and safety
-* Multimodal AI
-* Reinforcement learning when directly relevant to AI systems or intelligent agents
 * Embodied AI, robotics, and AI + hardware when the connection to intelligent systems is substantial
 
 Do not recommend papers merely because they contain the word "AI", "deep learning", "machine learning", or "neural network".
